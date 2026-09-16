@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Central de Compras</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tinta:#1B2A24; --papel:#F5F6F2; --branco:#FFFFFF;
+  --verde:#1E7A4C; --verde-escuro:#155C39;
+  --ambar:#F2B41B; --ambar-claro:#FBF1D3;
+  --linha:#D8DDD4; --cinza:#68716B; --verm:#B5432E; --verm-claro:#F7E4DF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Archivo',system-ui,sans-serif;background:var(--papel);color:var(--tinta);font-size:16px;line-height:1.45}
+header{background:var(--tinta);color:#fff;padding:14px 18px;display:flex;align-items:baseline;gap:10px}
+header h1{font-size:20px;font-weight:800;letter-spacing:-.02em}
+header .emp{color:#B8C4BC;font-size:13px;font-weight:500;flex:1}
+header a.cot{color:var(--ambar);font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}
+main{max-width:860px;margin:0 auto;padding:18px 14px 60px}
+h3{font-size:15px;font-weight:700;margin:24px 0 8px}
+button{font-family:inherit;font-size:15px;font-weight:600;border:none;border-radius:8px;cursor:pointer;padding:11px 16px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--verde);outline-offset:1px}
+.bt-verde{background:var(--verde);color:#fff}
+.bt-verde:active{background:var(--verde-escuro)}
+.bt-mini{padding:7px 12px;font-size:13px;border-radius:6px}
+.bt-x{background:none;border:none;color:var(--cinza);font-size:16px;font-weight:700;padding:4px 8px;cursor:pointer}
+.bt-x:hover{color:var(--verm)}
+input[type=text],input[type=password],input[type=date],select{width:100%;font-family:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--linha);border-radius:8px;background:var(--branco);color:var(--tinta)}
+label{display:block;font-size:13px;font-weight:600;color:var(--cinza);margin:12px 0 5px}
+.caixa{background:var(--branco);border:1px solid var(--linha);border-radius:10px;padding:16px}
+.msg{font-size:14px;color:var(--cinza);margin:8px 0}
+.erro{color:var(--verm);font-size:14px;margin:10px 0}
+.centro{max-width:380px;margin:60px auto;padding:0 16px}
+.centro h2{font-size:22px;font-weight:800;margin-bottom:4px}
+.centro p{font-size:14px;color:var(--cinza);margin-bottom:14px}
+.centro button{width:100%;margin-top:16px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:var(--tinta);color:#fff;font-size:14px;font-weight:600;padding:10px 18px;border-radius:8px;opacity:0;transition:opacity .2s;z-index:9}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+
+.ind-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+@media (min-width:640px){.ind-grid{grid-template-columns:repeat(4,1fr)}}
+.ind{background:var(--branco);border:1px solid var(--linha);border-radius:10px;padding:14px}
+.ind .num{font-size:26px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.ind .rot{font-size:12px;font-weight:600;color:var(--cinza);margin-top:2px}
+.ind.destaque{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.ind.destaque .rot{color:#B8C4BC}
+
+.atalhos{display:flex;flex-wrap:wrap;gap:8px}
+.atalho{display:flex;align-items:center;gap:2px;background:var(--branco);border:1px solid var(--linha);border-radius:8px}
+.atalho a{display:block;padding:10px 14px;font-size:14px;font-weight:700;color:var(--verde-escuro);text-decoration:none}
+.atalho.fixo{background:var(--ambar-claro);border-color:#E5D194}
+
+details{margin-top:12px}
+summary{font-size:14px;font-weight:600;color:var(--verde);cursor:pointer}
+.form-linha{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.form-linha .cheio{grid-column:1 / -1}
+.form-acao{margin-top:14px}
+
+.item-linha{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--linha);flex-wrap:wrap}
+.item-linha:first-of-type{border-top:none}
+.item-linha .txt{flex:1;min-width:180px}
+.item-linha .tit{font-weight:600}
+.item-linha .sub{font-size:13px;color:var(--cinza)}
+.item-linha a.doc{font-size:13px;font-weight:700;color:var(--verde);text-decoration:none}
+.pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.pill.pendente{background:var(--ambar-claro);color:#8A6410}
+.pill.em_cotacao{background:#E2F0E8;color:var(--verde-escuro)}
+.pill.comprado{background:var(--verde);color:#fff}
+.pill.negado{background:#ECECEA;color:var(--cinza)}
+.pill.alta{background:var(--verm-claro);color:var(--verm)}
+.pill.baixa,.pill.normal{background:#ECECEA;color:var(--cinza)}
+.pill.freq{background:#ECECEA;color:var(--cinza);font-weight:600}
+select.status{width:auto;font-size:13px;padding:6px 8px;border-radius:6px}
+.check{width:20px;height:20px;flex:none}
+.rotina-feita .tit{text-decoration:line-through;color:var(--cinza)}
+.cat-tit{font-size:13px;font-weight:800;color:var(--cinza);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 2px}
+.cat-tit:first-of-type{margin-top:0}
+.valor{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+</style>
+</head>
+<body>
+<header>
+  <h1>Central de Compras</h1><span class="emp" id="emp"></span>
+  <a class="cot" href="../cotacoes/">Cotações &rarr;</a>
+</header>
+<main id="app"><p class="msg">Carregando…</p></main>
+<div class="toast" id="toast"></div>
+<script>
+var API = 'https://wughmiprdbycsmkjsslj.supabase.co/functions/v1/hub/api';
+var pin = localStorage.getItem('cot_pin') || '';
+var app = document.getElementById('app');
+var D = null;
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function toast(t){ var el = document.getElementById('toast'); el.textContent = t; el.className = 'toast on'; setTimeout(function(){ el.className = 'toast'; }, 2200); }
+function moeda(v){ return new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'}).format(v); }
+function hojeISO(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function dBr(s){ if (!s) return ''; var p = String(s).slice(0,10).split('-'); return p[2] + '/' + p[1] + '/' + p[0].slice(2); }
+function parseValor(t){
+  t = String(t || '').replace(/[R$ ]/g, '');
+  if (!t) return null;
+  if (t.indexOf(',') >= 0) { t = t.split('.').join('').replace(',', '.'); }
+  var v = parseFloat(t);
+  return isNaN(v) ? null : v;
+}
+
+function api(caminho, opts){
+  opts = opts || {};
+  opts.headers = Object.assign({'Content-Type':'application/json','x-pin':pin}, opts.headers || {});
+  return fetch(API + caminho, opts).then(function(r){
+    if (r.status === 401) { telaLogin('PIN incorreto ou sessão expirada.'); throw new Error('401'); }
+    return r.json().then(function(j){ if (!r.ok) { throw new Error(j.erro || 'Erro'); } return j; });
+  });
+}
+
+function boot(){
+  fetch(API + '/estado').then(function(r){ return r.json(); }).then(function(e){
+    document.getElementById('emp').textContent = e.empresa || '';
+    if (!e.temPin) {
+      app.innerHTML = '<div class="centro"><h2>Quase lá</h2><p>O PIN do setor ainda não foi criado. Abra primeiro o sistema de cotações, faça o primeiro acesso por lá, e depois volte aqui.</p><a href="../cotacoes/"><button class="bt-verde">Abrir sistema de cotações</button></a></div>';
+      return;
+    }
+    if (!pin) { telaLogin(''); } else { carregar(); }
+  }).catch(function(){ app.innerHTML = '<p class="erro">Não consegui carregar. Verifique a conexão e recarregue a página.</p>'; });
+}
+
+function telaLogin(msg){
+  app.innerHTML = '<div class="centro"><h2>Entrar na central</h2>'
+    + '<p>Digite o PIN do setor (o mesmo do sistema de cotações).</p>'
+    + '<input type="password" id="l-pin" inputmode="numeric" autocomplete="current-password">'
+    + '<div class="erro">' + esc(msg) + '</div>'
+    + '<button class="bt-verde" id="l-ok">Entrar</button></div>';
+  var entrar = function(){
+    pin = document.getElementById('l-pin').value.trim();
+    api('/tudo?dia=' + hojeISO()).then(function(d){ localStorage.setItem('cot_pin', pin); D = d; render(); }).catch(function(){});
+  };
+  document.getElementById('l-ok').onclick = entrar;
+  document.getElementById('l-pin').addEventListener('keydown', function(ev){ if (ev.key === 'Enter') entrar(); });
+}
+
+function carregar(){
+  api('/tudo?dia=' + hojeISO()).then(function(d){ D = d; render(); }).catch(function(){});
+}
+
+function render(){
+  var i = D.indicadores;
+  var h = '';
+
+  // ---------------- indicadores
+  h += '<div class="ind-grid">'
+    + '<div class="ind destaque"><div class="num">' + i.cot_abertas + '</div><div class="rot">cotações abertas</div></div>'
+    + '<div class="ind"><div class="num">' + i.sol_pendentes + '</div><div class="rot">solicitações na fila</div></div>'
+    + '<div class="ind"><div class="num">' + i.compras_mes + '</div><div class="rot">compras este mês</div></div>'
+    + '<div class="ind"><div class="num">' + moeda(i.gasto_mes) + '</div><div class="rot">gasto este mês</div></div>'
+    + '</div>';
+
+  // ---------------- atalhos
+  h += '<h3>Atalhos</h3><div class="caixa"><div class="atalhos">'
+    + '<span class="atalho fixo"><a href="../cotacoes/">Sistema de Cotações</a></span>';
+  for (var a = 0; a < D.atalhos.length; a++) {
+    var at = D.atalhos[a];
+    h += '<span class="atalho"><a href="' + esc(at.url) + '" target="_blank" rel="noopener">' + esc(at.nome) + '</a>'
+      + '<button class="bt-x" data-del="atalhos/' + at.id + '" title="Remover">&times;</button></span>';
+  }
+  h += '</div><details><summary>+ Adicionar atalho</summary>'
+    + '<div class="form-linha"><div><label>Nome</label><input type="text" id="a-nome" placeholder="ex.: Drive do setor"></div>'
+    + '<div><label>Endereço (link)</label><input type="text" id="a-url" placeholder="cole o link aqui"></div></div>'
+    + '<div class="form-acao"><button class="bt-verde bt-mini" id="a-ok">Salvar atalho</button></div></details></div>';
+
+  // ---------------- rotina de hoje
+  h += '<h3>Rotina de hoje &middot; ' + dBr(D.dia) + '</h3><div class="caixa">';
+  if (!D.rotinas.length) h += '<p class="msg">Nenhuma tarefa cadastrada ainda. Adicione as tarefas do dia a dia do setor.</p>';
+  for (var r = 0; r < D.rotinas.length; r++) {
+    var rt = D.rotinas[r];
+    var feita = D.marcadas.indexOf(rt.id) >= 0;
+    h += '<div class="item-linha' + (feita ? ' rotina-feita' : '') + '">'
+      + '<input type="checkbox" class="check" data-rot="' + rt.id + '"' + (feita ? ' checked' : '') + '>'
+      + '<div class="txt"><span class="tit">' + esc(rt.titulo) + '</span></div>'
+      + '<span class="pill freq">' + (rt.frequencia === 'diaria' ? 'diária' : rt.frequencia) + '</span>'
+      + '<button class="bt-x" data-del="rotinas/' + rt.id + '" title="Excluir tarefa">&times;</button></div>';
+  }
+  h += '<details><summary>+ Adicionar tarefa</summary>'
+    + '<div class="form-linha"><div><label>Tarefa</label><input type="text" id="r-tit" placeholder="ex.: Conferir e-mails de fornecedores"></div>'
+    + '<div><label>Frequência</label><select id="r-freq"><option value="diaria">Diária</option><option value="semanal">Semanal</option><option value="mensal">Mensal</option></select></div></div>'
+    + '<div class="form-acao"><button class="bt-verde bt-mini" id="r-ok">Salvar tarefa</button></div></details></div>';
+
+  // ---------------- solicitações
+  var ativas = [], fechadas = [];
+  for (var s = 0; s < D.solicitacoes.length; s++) {
+    (D.solicitacoes[s].status === 'pendente' || D.solicitacoes[s].status === 'em_cotacao' ? ativas : fechadas).push(D.solicitacoes[s]);
+  }
+  h += '<h3>Solicitações de compra</h3><div class="caixa">';
+  if (!ativas.length) h += '<p class="msg">Nenhuma solicitação na fila. 👌</p>';
+  for (var s2 = 0; s2 < ativas.length; s2++) h += linhaSol(ativas[s2]);
+  h += '<details><summary>+ Registrar solicitação</summary>'
+    + '<div class="form-linha"><div class="cheio"><label>O que foi pedido</label><input type="text" id="s-desc" placeholder="ex.: 2 cx de papel A4 pra recepção"></div>'
+    + '<div><label>Quem pediu</label><input type="text" id="s-quem" placeholder="nome ou setor"></div>'
+    + '<div><label>Urgência</label><select id="s-urg"><option value="normal">Normal</option><option value="alta">Alta</option><option value="baixa">Baixa</option></select></div></div>'
+    + '<div class="form-acao"><button class="bt-verde bt-mini" id="s-ok">Salvar solicitação</button></div></details>';
+  if (fechadas.length) {
+    h += '<details><summary>Concluídas e negadas (' + fechadas.length + ')</summary>';
+    for (var s3 = 0; s3 < fechadas.length; s3++) h += linhaSol(fechadas[s3]);
+    h += '</details>';
+  }
+  h += '</div>';
+
+  // ---------------- compras
+  h += '<h3>Registro de compras</h3><div class="caixa">'
+    + '<details open><summary>+ Registrar compra</summary>'
+    + '<div class="form-linha"><div class="cheio"><label>O que foi comprado</label><input type="text" id="c-desc" placeholder="ex.: 10 cx Coca Cola lata"></div>'
+    + '<div><label>Fornecedor</label><input type="text" id="c-forn" placeholder="ex.: Distribuidora Sol"></div>'
+    + '<div><label>Valor total (R$)</label><input type="text" inputmode="decimal" id="c-valor" placeholder="0,00"></div>'
+    + '<div><label>Data</label><input type="date" id="c-data" value="' + hojeISO() + '"></div>'
+    + '<div><label>Link do documento (nota, pedido…)</label><input type="text" id="c-doc" placeholder="opcional — cole o link do Drive"></div></div>'
+    + '<div class="form-acao"><button class="bt-verde bt-mini" id="c-ok">Salvar compra</button></div></details>';
+  if (!D.compras.length) {
+    h += '<p class="msg">Nenhuma compra registrada ainda.</p>';
+  } else {
+    var LIM = 15;
+    var mostrar = D.compras.slice(0, LIM);
+    for (var c = 0; c < mostrar.length; c++) h += linhaCompra(mostrar[c]);
+    if (D.compras.length > LIM) {
+      h += '<details><summary>Ver mais antigas (' + (D.compras.length - LIM) + ')</summary>';
+      for (var c2 = LIM; c2 < D.compras.length; c2++) h += linhaCompra(D.compras[c2]);
+      h += '</details>';
+    }
+  }
+  h += '</div>';
+
+  // ---------------- documentos
+  h += '<h3>Documentos</h3><div class="caixa">';
+  if (!D.documentos.length) {
+    h += '<p class="msg">Nenhum documento salvo. Adicione links dos arquivos importantes do setor (contratos, tabelas, procedimentos…).</p>';
+  } else {
+    var porCat = {};
+    for (var dd = 0; dd < D.documentos.length; dd++) {
+      var doc = D.documentos[dd];
+      var cat = doc.categoria || 'Geral';
+      if (!porCat[cat]) porCat[cat] = [];
+      porCat[cat].push(doc);
+    }
+    var cats = [];
+    for (var k in porCat) cats.push(k);
+    cats.sort();
+    for (var k2 = 0; k2 < cats.length; k2++) {
+      h += '<div class="cat-tit">' + esc(cats[k2]) + '</div>';
+      var docs = porCat[cats[k2]];
+      for (var d3 = 0; d3 < docs.length; d3++) {
+        h += '<div class="item-linha"><div class="txt"><a class="doc" href="' + esc(docs[d3].url) + '" target="_blank" rel="noopener">' + esc(docs[d3].nome) + '</a></div>'
+          + '<button class="bt-x" data-del="documentos/' + docs[d3].id + '" title="Remover">&times;</button></div>';
+      }
+    }
+  }
+  h += '<details><summary>+ Adicionar documento</summary>'
+    + '<div class="form-linha"><div><label>Nome</label><input type="text" id="d-nome" placeholder="ex.: Contrato Distribuidora Sol"></div>'
+    + '<div><label>Categoria</label><input type="text" id="d-cat" placeholder="ex.: Contratos" list="d-cats"><datalist id="d-cats"></datalist></div>'
+    + '<div class="cheio"><label>Link do arquivo</label><input type="text" id="d-url" placeholder="cole o link do Drive aqui"></div></div>'
+    + '<div class="form-acao"><button class="bt-verde bt-mini" id="d-ok">Salvar documento</button></div></details></div>';
+
+  app.innerHTML = h;
+  ligar();
+}
+
+function linhaSol(s){
+  return '<div class="item-linha"><div class="txt"><span class="tit">' + esc(s.descricao) + '</span>'
+    + '<div class="sub">' + (s.solicitante ? esc(s.solicitante) + ' · ' : '') + dBr(s.criada_em) + '</div></div>'
+    + (s.urgencia === 'alta' ? '<span class="pill alta">alta</span>' : '')
+    + '<select class="status" data-sol="' + s.id + '">'
+    + '<option value="pendente"' + (s.status === 'pendente' ? ' selected' : '') + '>Pendente</option>'
+    + '<option value="em_cotacao"' + (s.status === 'em_cotacao' ? ' selected' : '') + '>Em cotação</option>'
+    + '<option value="comprado"' + (s.status === 'comprado' ? ' selected' : '') + '>Comprado</option>'
+    + '<option value="negado"' + (s.status === 'negado' ? ' selected' : '') + '>Negado</option></select>'
+    + '<button class="bt-x" data-del="solicitacoes/' + s.id + '" title="Excluir">&times;</button></div>';
+}
+
+function linhaCompra(c){
+  return '<div class="item-linha"><div class="txt"><span class="tit">' + esc(c.descricao) + '</span>'
+    + '<div class="sub">' + (c.fornecedor ? esc(c.fornecedor) + ' · ' : '') + dBr(c.data_compra)
+    + (c.doc_url ? ' · <a class="doc" href="' + esc(c.doc_url) + '" target="_blank" rel="noopener">documento</a>' : '') + '</div></div>'
+    + (c.valor != null ? '<span class="valor">' + moeda(c.valor) + '</span>' : '')
+    + '<button class="bt-x" data-del="compras/' + c.id + '" title="Excluir">&times;</button></div>';
+}
+
+function ligar(){
+  var dels = app.querySelectorAll('[data-del]');
+  for (var i = 0; i < dels.length; i++) dels[i].onclick = function(){
+    var alvo = this.getAttribute('data-del');
+    if (!confirm('Excluir este registro?')) return;
+    api('/' + alvo, {method:'DELETE'}).then(function(){ toast('Excluído.'); carregar(); }).catch(function(e){ toast(e.message); });
+  };
+
+  var rots = app.querySelectorAll('[data-rot]');
+  for (var j = 0; j < rots.length; j++) rots[j].onchange = function(){
+    api('/rotinas/' + this.getAttribute('data-rot') + '/marcar', {method:'POST', body: JSON.stringify({dia: hojeISO(), feita: this.checked})})
+      .then(carregar).catch(function(e){ toast(e.message); });
+  };
+
+  var sols = app.querySelectorAll('[data-sol]');
+  for (var k = 0; k < sols.length; k++) sols[k].onchange = function(){
+    api('/solicitacoes/' + this.getAttribute('data-sol') + '/status', {method:'POST', body: JSON.stringify({status: this.value})})
+      .then(function(){ toast('Status atualizado.'); carregar(); }).catch(function(e){ toast(e.message); });
+  };
+
+  var aOk = document.getElementById('a-ok');
+  if (aOk) aOk.onclick = function(){
+    var nome = document.getElementById('a-nome').value.trim();
+    var u = document.getElementById('a-url').value.trim();
+    if (!nome || !u) { toast('Preencha o nome e o link.'); return; }
+    api('/atalhos', {method:'POST', body: JSON.stringify({nome:nome, url:u})})
+      .then(function(){ toast('Atalho salvo.'); carregar(); }).catch(function(e){ toast(e.message); });
+  };
+
+  var rOk = document.getElementById('r-ok');
+  if (rOk) rOk.onclick = function(){
+    var tit = document.getElementById('r-tit').value.trim();
+    if (!tit) { toast('Escreva a tarefa.'); return; }
+    api('/rotinas', {method:'POST', body: JSON.stringify({titulo:tit, frequencia: document.getElementById('r-freq').value})})
+      .then(function(){ toast('Tarefa salva.'); carregar(); }).catch(function(e){ toast(e.message); });
+  };
+
+  var sOk = document.getElementById('s-ok');
+  if (sOk) sOk.onclick = function(){
+    var desc = document.getElementById('s-desc').value.trim();
+    if (!desc) { toast('Descreva a solicitação.'); return; }
+    api('/solicitacoes', {method:'POST', body: JSON.stringify({descricao:desc, solicitante: document.getElementById('s-quem').value.trim(), urgencia: document.getElementById('s-urg').value})})
+      .then(function(){ toast('Solicitação registrada.'); carregar(); }).catch(function(e){ toast(e.message); });
+  };
+
+  var cOk = document.getElementById('c-ok');
+  if (cOk) cOk.onclick = function(){
+    var desc = document.getElementById('c-desc').value.trim();
+    if (!desc) { toast('Descreva a compra.'); return; }
+    api('/compras', {method:'POST', body: JSON.stringify({
+      descricao: desc,
+      fornecedor: document.getElementById('c-forn').value.trim(),
+      valor: parseValor(document.getElementById('c-valor').value),
+      data_compra: document.getElementById('c-data').value,
+      doc_url: document.getElementById('c-doc').value.trim()
+    })}).then(function(){ toast('Compra registrada.'); carregar(); }).catch(function(e){ toast(e.message); });
+  };
+
+  var dOk = document.getElementById('d-ok');
+  if (dOk) dOk.onclick = function(){
+    var nome = document.getElementById('d-nome').value.trim();
+    var u = document.getElementById('d-url').value.trim();
+    if (!nome || !u) { toast('Preencha o nome e o link.'); return; }
+    api('/documentos', {method:'POST', body: JSON.stringify({nome:nome, categoria: document.getElementById('d-cat').value.trim(), url:u})})
+      .then(function(){ toast('Documento salvo.'); carregar(); }).catch(function(e){ toast(e.message); });
+  };
+
+  var dl = document.getElementById('d-cats');
+  if (dl && D) {
+    var vistas = {};
+    var ops = '';
+    for (var m = 0; m < D.documentos.length; m++) {
+      var cat = D.documentos[m].categoria;
+      if (cat && !vistas[cat]) { vistas[cat] = true; ops += '<option value="' + esc(cat) + '">'; }
+    }
+    dl.innerHTML = ops;
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
