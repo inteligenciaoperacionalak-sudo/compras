@@ -111,6 +111,34 @@ textarea{width:100%;font-family:inherit;font-size:16px;padding:11px 12px;border:
 .pill.ruptura{background:#E3E6E1;color:var(--tinta)}
 .toast button{background:none;color:var(--ambar);padding:0 0 0 14px;font-size:14px;font-weight:800}
 
+/* checagem NF + Mercado Livre */
+.chk-topo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.chk-status{font-size:13px;font-weight:700;padding:5px 11px;border-radius:99px}
+.chk-status.ok{background:var(--verde);color:#fff}
+.chk-status.pend{background:var(--ambar-claro);color:#8A6410}
+.chk-status.venc{background:var(--verm-claro);color:var(--verm)}
+.chk-status.folga{background:#ECECEA;color:var(--cinza)}
+.chk-corpo{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:640px){.chk-corpo{grid-template-columns:1fr 190px}}
+.chk-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--linha);border-radius:8px;margin:8px 0 0;cursor:pointer;font-weight:600;font-size:15px;color:var(--tinta)}
+.chk-item input{width:24px;height:24px;flex:none;accent-color:var(--verde)}
+.chk-item.feito{background:#E9F4EE;border-color:#BFDCCB}
+.chk-item .sub{display:block;font-size:12px;font-weight:500;color:var(--cinza)}
+.chk-ind{background:var(--papel);border-radius:10px;padding:14px;align-self:start}
+.chk-ind .num{font-size:30px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.chk-ind .rot{font-size:12px;font-weight:700;color:var(--cinza)}
+.chk-ind .det{font-size:12px;color:var(--cinza);margin-top:6px;line-height:1.5}
+.pill.no_prazo{background:var(--verde);color:#fff}
+.pill.atrasada{background:var(--ambar-claro);color:#8A6410}
+.pill.nao_feita{background:var(--verm-claro);color:var(--verm)}
+.pill.pendente_chk{background:#ECECEA;color:var(--cinza)}
+.passos{font-size:14px;margin:8px 0 4px 18px}
+.passos li{margin:3px 0}
+.passos code{background:var(--papel);padding:1px 6px;border-radius:4px;font-size:13px}
+.contato{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;padding:6px 0 10px;border-bottom:1px solid var(--linha)}
+@media (min-width:640px){.contato{grid-template-columns:1fr 1fr 1fr auto;align-items:end}}
+.contato label{margin-top:8px}
+
 /* relatório */
 .rel-filtro{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
 .rel-filtro .campo{flex:1;min-width:130px}
@@ -262,6 +290,110 @@ function blocoOcorrencias(){
   }
   return h + '</div>';
 }
+// ============================================ checagem NF + Mercado Livre ===
+var CONT = null; // contatos em edição
+var NOME_DIA = ['dom','seg','ter','qua','qui','sex','sáb'];
+function diaCurto(iso){ var d = new Date(iso + 'T12:00:00'); return NOME_DIA[d.getDay()] + ', ' + dBr(iso).slice(0,5); }
+function horaBr(ts){ return new Date(ts).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}); }
+var SIT = { no_prazo:'no prazo', atrasada:'feita com atraso', nao_feita:'não feita', pendente:'hoje, até 17h' };
+
+function blocoChecagem(){
+  var c = D.checagem; if (!c) return '';
+  var reg = c.registro || {}, h = '<h3>Checagem: e-mail de NFs e Mercado Livre</h3><div class="caixa">';
+  h += '<div class="chk-topo">';
+  if (!c.eh_dia) h += '<span class="chk-status folga">Hoje não tem checagem</span><span class="msg" style="margin:0">Próxima: ' + diaCurto(c.proxima) + ', até ' + c.hora_limite + 'h</span>';
+  else if (reg.concluida_em) h += '<span class="chk-status ok">✓ Feita hoje às ' + horaBr(reg.concluida_em) + '</span>';
+  else if (c.vencida) h += '<span class="chk-status venc">Prazo de hoje encerrou às ' + c.hora_limite + 'h</span><span class="msg" style="margin:0">Confira e marque assim que puder</span>';
+  else h += '<span class="chk-status pend">Pendente · prazo hoje até ' + c.hora_limite + 'h</span>';
+  h += '</div><div class="chk-corpo"><div>';
+  if (c.eh_dia) {
+    h += '<label class="chk-item' + (reg.email_ok ? ' feito' : '') + '"><input type="checkbox" id="chk-email"' + (reg.email_ok ? ' checked' : '') + '>'
+      + '<span>Conferi o e-mail de compras<span class="sub">notas fiscais recebidas</span></span></label>'
+      + '<label class="chk-item' + (reg.ml_ok ? ' feito' : '') + '"><input type="checkbox" id="chk-ml"' + (reg.ml_ok ? ' checked' : '') + '>'
+      + '<span>Conferi os pedidos no Mercado Livre<span class="sub">status de todos os pedidos em aberto</span></span></label>'
+      + '<label for="chk-obs">Encontrou algo? (opcional)</label>'
+      + '<textarea id="chk-obs" style="min-height:52px" placeholder="ex.: NF da Distribuidora Sol chegou; pedido do ML das lâmpadas está atrasado">' + esc(reg.obs || '') + '</textarea>';
+  } else {
+    h += '<p class="msg">A checagem é toda segunda, quarta e sexta, até as ' + c.hora_limite + 'h. Se não for marcada até lá, o WhatsApp avisa.</p>';
+  }
+  h += '</div>';
+  var r = c.resumo;
+  h += '<div class="chk-ind">';
+  if (!r.previstas) h += '<div class="num">—</div><div class="rot">checagens no prazo este mês</div><div class="det">Começa a contar na primeira checagem.</div>';
+  else h += '<div class="num">' + Math.round(r.no_prazo / r.previstas * 100) + '%</div><div class="rot">checagens no prazo este mês</div>'
+    + '<div class="det">' + r.no_prazo + ' de ' + r.previstas + ' no prazo<br>' + r.atrasadas + ' com atraso · ' + r.nao_feitas + ' não feita' + (r.nao_feitas === 1 ? '' : 's') + '</div>';
+  h += '</div></div>';
+
+  if (r.lista.length) {
+    h += '<details><summary>Histórico do mês (' + r.lista.length + ')</summary>';
+    for (var i = 0; i < r.lista.length; i++) {
+      var x = r.lista[i];
+      h += '<div class="item-linha"><div class="txt"><span class="tit">' + diaCurto(x.dia) + '</span>'
+        + '<div class="sub">' + (x.concluida_em ? 'marcada ' + (new Date(x.concluida_em).toLocaleDateString('sv-SE') === x.dia ? 'às ' + horaBr(x.concluida_em) : 'em ' + dBr(new Date(x.concluida_em).toLocaleDateString('sv-SE'))) : 'sem marcação')
+        + (x.alerta_em ? ' · alerta enviado no WhatsApp' : '') + '</div></div>'
+        + '<span class="pill ' + (x.situacao === 'pendente' ? 'pendente_chk' : x.situacao) + '">' + SIT[x.situacao] + '</span></div>';
+    }
+    h += '</details>';
+  }
+
+  if (!CONT) {
+    CONT = c.contatos.map(function(k){ return {nome:k.nome, telefone:k.telefone, apikey:'', salvo:true}; });
+    if (!CONT.length) CONT = [{nome:'Compras', telefone:'', apikey:''}, {nome:'Gestor', telefone:'', apikey:''}];
+  }
+  h += '<details' + (c.contatos.length ? '' : ' open') + '><summary>Alertas no WhatsApp (' + (c.contatos.length ? c.contatos.length + ' contato' + (c.contatos.length > 1 ? 's' : '') : 'configurar') + ')</summary>'
+    + '<p class="msg">Às ' + c.hora_limite + 'h de seg, qua e sex, se a checagem não estiver marcada, cada contato abaixo recebe uma mensagem. Para ativar, faça isto <b>uma vez em cada celular</b>:</p>'
+    + '<ol class="passos"><li>Salve o contato <code>+34 623 80 11 90</code> (CallMeBot)</li>'
+    + '<li>Mande para ele no WhatsApp: <code>I allow callmebot to send me messages</code></li>'
+    + '<li>Em até 2 minutos chega uma <b>apikey</b> (um número). Cole no campo "Chave" abaixo.</li></ol>'
+    + '<p class="msg">Se o contato não responder, confira o número atualizado em callmebot.com.</p>';
+  for (var k = 0; k < CONT.length; k++) {
+    var ct = CONT[k];
+    h += '<div class="contato"><div><label>Nome</label><input type="text" data-ct="' + k + '" data-campo="nome" value="' + esc(ct.nome) + '"></div>'
+      + '<div><label>Celular com DDD</label><input type="text" inputmode="tel" data-ct="' + k + '" data-campo="telefone" placeholder="(11) 99999-9999" value="' + esc(ct.telefone) + '"></div>'
+      + '<div><label>Chave (apikey)</label><input type="text" inputmode="numeric" data-ct="' + k + '" data-campo="apikey" placeholder="' + (ct.salvo ? 'salva (vazio mantém)' : 'ex.: 1234567') + '" value="' + esc(ct.apikey) + '"></div>'
+      + '<div><button class="bt-x" data-ct-del="' + k + '" title="Remover contato">&times;</button></div></div>';
+  }
+  h += '<div class="oc-acoes">' + (CONT.length < 5 ? '<button class="bt-cinza bt-mini" id="ct-add">+ Contato</button>' : '')
+    + '<button class="bt-verde bt-mini" id="ct-ok">Salvar contatos</button>'
+    + (c.contatos.length ? '<button class="bt-cinza bt-mini" id="ct-teste">Enviar mensagem de teste</button>' : '') + '</div>'
+    + (reg.alerta_status ? '<p class="msg">Último alerta de hoje: ' + esc(reg.alerta_status) + '</p>' : '')
+    + '</details></div>';
+  return h;
+}
+
+function ligarChecagem(){
+  var em = document.getElementById('chk-email'), ml = document.getElementById('chk-ml'), obs = document.getElementById('chk-obs');
+  var salvar = function(msgOk){
+    return api('/checagens', {method:'POST', body: JSON.stringify({email_ok: em.checked, ml_ok: ml.checked, obs: obs.value})})
+      .then(function(r){ toast(r.concluida_em ? 'Checagem concluída. 👍' : msgOk); carregar(); })
+      .catch(function(e){ toast(e.message); carregar(); });
+  };
+  if (em) { em.onchange = function(){ salvar('Marcado. Falta o outro item.'); }; ml.onchange = function(){ salvar('Marcado. Falta o outro item.'); }; }
+  if (obs) obs.onchange = function(){ salvar('Observação salva.'); };
+
+  var ins = app.querySelectorAll('[data-ct]');
+  for (var i = 0; i < ins.length; i++) ins[i].oninput = function(){ CONT[+this.getAttribute('data-ct')][this.getAttribute('data-campo')] = this.value; };
+  var dels = app.querySelectorAll('[data-ct-del]');
+  for (var j = 0; j < dels.length; j++) dels[j].onclick = function(){ CONT.splice(+this.getAttribute('data-ct-del'), 1); render(); abrirAlertas(); };
+  var add = document.getElementById('ct-add');
+  if (add) add.onclick = function(){ CONT.push({nome:'', telefone:'', apikey:''}); render(); abrirAlertas(); };
+  var ok = document.getElementById('ct-ok');
+  if (ok) ok.onclick = function(){
+    ok.disabled = true;
+    api('/alertas/contatos', {method:'POST', body: JSON.stringify({contatos: CONT})})
+      .then(function(){ toast('Contatos salvos.'); CONT = null; carregar(); })
+      .catch(function(e){ ok.disabled = false; toast(e.message); });
+  };
+  var te = document.getElementById('ct-teste');
+  if (te) te.onclick = function(){
+    te.disabled = true; te.textContent = 'Enviando…';
+    api('/alertas/teste', {method:'POST'})
+      .then(function(r){ toast(r.falhas.length ? 'Falhou: ' + r.falhas.join(' | ') : 'Teste enviado para ' + r.enviados.join(', ') + '.'); te.disabled = false; te.textContent = 'Enviar mensagem de teste'; })
+      .catch(function(e){ toast(e.message); te.disabled = false; te.textContent = 'Enviar mensagem de teste'; });
+  };
+}
+function abrirAlertas(){ var d = app.querySelectorAll('details'); for (var i = 0; i < d.length; i++) if (d[i].querySelector('#ct-ok')) d[i].open = true; }
+
 function rotuloCurto(k){ return k === 'urgencia' ? 'urgência' : k === 'prazo_curto' ? 'prazo curto' : 'ruptura'; }
 
 function render(){
@@ -277,6 +409,7 @@ function render(){
     + '<div class="ind"><div class="num">' + moeda(i.gasto_mes) + '</div><div class="rot">gasto este mês</div></div>'
     + '</div>';
 
+  h += blocoChecagem();
   h += blocoOcorrencias();
 
   // ---------------- atalhos
@@ -577,6 +710,7 @@ function ligarRelatorio(){
 function ligar(){
   ligarComum();
   ligarOcorrencias();
+  ligarChecagem();
   var dels = app.querySelectorAll('[data-del]');
   for (var i = 0; i < dels.length; i++) dels[i].onclick = function(){
     var alvo = this.getAttribute('data-del');
