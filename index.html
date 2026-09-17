@@ -81,6 +81,67 @@ select.status{width:auto;font-size:13px;padding:6px 8px;border-radius:6px}
 .cat-tit{font-size:13px;font-weight:800;color:var(--cinza);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 2px}
 .cat-tit:first-of-type{margin-top:0}
 .valor{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+
+/* navegação */
+.abas{display:flex;gap:6px;margin-bottom:4px}
+.aba{background:none;color:var(--cinza);padding:8px 12px;font-size:14px;border-radius:99px}
+.aba.on{background:var(--tinta);color:#fff}
+
+/* ocorrências */
+.oc-botoes{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:640px){.oc-botoes{grid-template-columns:repeat(3,1fr)}}
+.oc-bt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:14px;border-radius:10px;color:#fff;min-height:74px}
+.oc-bt .t{font-size:15px;font-weight:800;line-height:1.2}
+.oc-bt .n{font-size:12px;font-weight:600;opacity:.85}
+.oc-bt.urgencia{background:var(--verm)}
+.oc-bt.prazo_curto{background:#B77D0B}
+.oc-bt.ruptura{background:var(--tinta)}
+.oc-bt.sel{box-shadow:0 0 0 3px var(--papel),0 0 0 5px currentColor;outline:none}
+.oc-form{margin-top:14px;border-top:1px solid var(--linha);padding-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--papel);border:1px solid var(--linha);color:var(--tinta);font-size:14px;font-weight:600;padding:8px 12px;border-radius:99px}
+.chip.on{background:var(--verde);border-color:var(--verde);color:#fff}
+textarea{width:100%;font-family:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--linha);border-radius:8px;background:var(--branco);color:var(--tinta);min-height:74px;resize:vertical}
+.oc-acoes{display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.bt-cinza{background:#ECECEA;color:var(--tinta)}
+.oc-dia{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--cinza);margin-left:auto}
+.oc-dia input{width:auto;padding:7px 8px;font-size:14px}
+.pill.urgencia{background:var(--verm-claro);color:var(--verm)}
+.pill.prazo_curto{background:var(--ambar-claro);color:#8A6410}
+.pill.ruptura{background:#E3E6E1;color:var(--tinta)}
+.toast button{background:none;color:var(--ambar);padding:0 0 0 14px;font-size:14px;font-weight:800}
+
+/* relatório */
+.rel-filtro{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.rel-filtro .campo{flex:1;min-width:130px}
+.rel-filtro label{margin-top:0}
+.rel-tot{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
+@media (min-width:640px){.rel-tot{grid-template-columns:repeat(3,1fr)}}
+.rel-tot .ind{border-left:5px solid var(--linha)}
+.rel-tot .ind.urgencia{border-left-color:var(--verm)}
+.rel-tot .ind.prazo_curto{border-left-color:#B77D0B}
+.rel-tot .ind.ruptura{border-left-color:var(--tinta)}
+.delta{font-size:12px;font-weight:600;color:var(--cinza);margin-top:4px}
+.delta.sobe{color:var(--verm)} .delta.desce{color:var(--verde)}
+.barras{margin-top:6px}
+.barra{display:grid;grid-template-columns:120px 1fr 32px;gap:8px;align-items:center;font-size:13px;padding:3px 0}
+.barra .trilho{background:var(--papel);border-radius:4px;height:14px;overflow:hidden}
+.barra .enche{height:100%;border-radius:4px}
+.barra .q{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.enche.urgencia{background:var(--verm)} .enche.prazo_curto{background:#B77D0B} .enche.ruptura{background:var(--tinta)}
+table.rel{width:100%;border-collapse:collapse;font-size:14px}
+table.rel th{text-align:left;font-size:12px;color:var(--cinza);font-weight:700;padding:6px 8px 6px 0;border-bottom:1px solid var(--linha)}
+table.rel td{padding:8px 8px 8px 0;border-bottom:1px solid var(--linha);vertical-align:top}
+.rel-acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.so-print{display:none}
+@media print{
+  header,.abas,.rel-filtro,.rel-acoes,.toast,.no-print{display:none!important}
+  body{background:#fff;font-size:12px}
+  .caixa,.ind{border-color:#bbb;break-inside:avoid}
+  .so-print{display:block}
+  main{padding:0;max-width:none}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 </style>
 </head>
 <body>
@@ -97,7 +158,15 @@ var app = document.getElementById('app');
 var D = null;
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function toast(t){ var el = document.getElementById('toast'); el.textContent = t; el.className = 'toast on'; setTimeout(function(){ el.className = 'toast'; }, 2200); }
+var toastTimer = null;
+function toast(t, acao, fn){
+  var el = document.getElementById('toast');
+  el.textContent = t;
+  if (acao) { var b = document.createElement('button'); b.textContent = acao; b.onclick = function(){ el.className = 'toast'; fn(); }; el.appendChild(b); }
+  el.className = 'toast on';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.className = 'toast'; }, acao ? 6000 : 2200);
+}
 function moeda(v){ return new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'}).format(v); }
 function hojeISO(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function dBr(s){ if (!s) return ''; var p = String(s).slice(0,10).split('-'); return p[2] + '/' + p[1] + '/' + p[0].slice(2); }
@@ -147,9 +216,58 @@ function carregar(){
   api('/tudo?dia=' + hojeISO()).then(function(d){ D = d; render(); }).catch(function(){});
 }
 
+var VIEW = location.hash === '#relatorio' ? 'relatorio' : 'painel';
+var OC = { tipo: null, setor: null, texto: '', dia: '' };
+var ORDEM_TIPOS = ['urgencia', 'prazo_curto', 'ruptura'];
+
+function abas(){
+  return '<div class="abas"><button class="aba' + (VIEW === 'painel' ? ' on' : '') + '" data-view="painel">Painel</button>'
+    + '<button class="aba' + (VIEW === 'relatorio' ? ' on' : '') + '" data-view="relatorio">Relatório de indicadores</button></div>';
+}
+
+function blocoOcorrencias(){
+  var h = '<h3>Registrar indicador</h3><div class="caixa"><div class="oc-botoes">';
+  for (var t = 0; t < ORDEM_TIPOS.length; t++) {
+    var k = ORDEM_TIPOS[t], n = 0;
+    for (var o = 0; o < D.ocorrencias_mes.length; o++) if (D.ocorrencias_mes[o].tipo === k) n++;
+    h += '<button class="oc-bt ' + k + (OC.tipo === k ? ' sel' : '') + '" data-oc="' + k + '" aria-pressed="' + (OC.tipo === k) + '">'
+      + '<span class="t">' + esc(D.tipos[k].nome) + '</span><span class="n">' + n + ' este mês</span></button>';
+  }
+  h += '</div>';
+  if (OC.tipo) {
+    var tp = D.tipos[OC.tipo];
+    h += '<div class="oc-form"><label>De qual setor?</label><div class="chips">';
+    for (var s = 0; s < tp.setores.length; s++) {
+      var st = tp.setores[s];
+      h += '<button class="chip' + (OC.setor === st ? ' on' : '') + '" data-setor="' + esc(st) + '">' + esc(st) + '</button>';
+    }
+    var dica = OC.tipo === 'urgencia' ? 'ex.: compressor da câmara fria parou, compra de peça no mesmo dia'
+      : OC.tipo === 'prazo_curto' ? 'ex.: pedido de 200 copos para o evento de sexta, chegou na terça'
+      : 'ex.: acabou o gás de chopp, faltou no sábado à noite';
+    h += '</div><label for="oc-txt">O que aconteceu?</label>'
+      + '<textarea id="oc-txt" placeholder="' + dica + '">' + esc(OC.texto) + '</textarea>'
+      + '<div class="oc-acoes"><button class="bt-verde" id="oc-ok">Registrar</button><button class="bt-cinza" id="oc-cancel">Cancelar</button>'
+      + '<span class="oc-dia"><label for="oc-dia" style="margin:0">Data</label><input type="date" id="oc-dia" value="' + (OC.dia || hojeISO()) + '"></span></div></div>';
+  }
+  if (D.ocorrencias_mes.length) {
+    h += '<details><summary>Registros deste mês (' + D.ocorrencias_mes.length + ')</summary>';
+    for (var r = 0; r < D.ocorrencias_mes.length; r++) {
+      var oc = D.ocorrencias_mes[r];
+      h += '<div class="item-linha"><div class="txt"><span class="tit">' + esc(oc.descricao) + '</span>'
+        + '<div class="sub">' + esc(oc.setor) + ' · ' + dBr(oc.dia) + '</div></div>'
+        + '<span class="pill ' + oc.tipo + '">' + esc(rotuloCurto(oc.tipo)) + '</span>'
+        + '<button class="bt-x" data-del="ocorrencias/' + oc.id + '" title="Excluir">&times;</button></div>';
+    }
+    h += '</details>';
+  }
+  return h + '</div>';
+}
+function rotuloCurto(k){ return k === 'urgencia' ? 'urgência' : k === 'prazo_curto' ? 'prazo curto' : 'ruptura'; }
+
 function render(){
+  if (VIEW === 'relatorio') { renderRelatorio(); return; }
   var i = D.indicadores;
-  var h = '';
+  var h = abas();
 
   // ---------------- indicadores
   h += '<div class="ind-grid">'
@@ -158,6 +276,8 @@ function render(){
     + '<div class="ind"><div class="num">' + i.compras_mes + '</div><div class="rot">compras este mês</div></div>'
     + '<div class="ind"><div class="num">' + moeda(i.gasto_mes) + '</div><div class="rot">gasto este mês</div></div>'
     + '</div>';
+
+  h += blocoOcorrencias();
 
   // ---------------- atalhos
   h += '<h3>Atalhos</h3><div class="caixa"><div class="atalhos">'
@@ -286,7 +406,177 @@ function linhaCompra(c){
     + '<button class="bt-x" data-del="compras/' + c.id + '" title="Excluir">&times;</button></div>';
 }
 
+function ligarComum(){
+  var vs = app.querySelectorAll('[data-view]');
+  for (var v = 0; v < vs.length; v++) vs[v].onclick = function(){
+    VIEW = this.getAttribute('data-view');
+    history.replaceState(null, '', VIEW === 'relatorio' ? '#relatorio' : location.pathname);
+    window.scrollTo(0, 0);
+    render();
+  };
+}
+
+function ligarOcorrencias(){
+  var bts = app.querySelectorAll('[data-oc]');
+  for (var i = 0; i < bts.length; i++) bts[i].onclick = function(){
+    var k = this.getAttribute('data-oc');
+    if (OC.tipo === k) { OC = { tipo: null, setor: null, texto: '', dia: '' }; }
+    else { OC.tipo = k; if (OC.setor && D.tipos[k].setores.indexOf(OC.setor) < 0) OC.setor = null; }
+    render();
+    var txt = document.getElementById('oc-txt');
+    if (txt && OC.setor) txt.focus();
+  };
+  var chips = app.querySelectorAll('[data-setor]');
+  for (var c = 0; c < chips.length; c++) chips[c].onclick = function(){
+    OC.setor = this.getAttribute('data-setor');
+    for (var z = 0; z < chips.length; z++) chips[z].className = 'chip' + (chips[z] === this ? ' on' : '');
+    document.getElementById('oc-txt').focus();
+  };
+  var txt = document.getElementById('oc-txt');
+  if (txt) txt.oninput = function(){ OC.texto = this.value; };
+  var dia = document.getElementById('oc-dia');
+  if (dia) dia.onchange = function(){ OC.dia = this.value; };
+  var cancel = document.getElementById('oc-cancel');
+  if (cancel) cancel.onclick = function(){ OC = { tipo: null, setor: null, texto: '', dia: '' }; render(); };
+  var ok = document.getElementById('oc-ok');
+  if (ok) ok.onclick = function(){
+    if (!OC.setor) { toast('Escolha o setor.'); return; }
+    if (!OC.texto.trim()) { toast('Escreva o que aconteceu.'); document.getElementById('oc-txt').focus(); return; }
+    ok.disabled = true;
+    api('/ocorrencias', {method:'POST', body: JSON.stringify({tipo: OC.tipo, setor: OC.setor, descricao: OC.texto, dia: OC.dia || hojeISO()})})
+      .then(function(reg){
+        OC = { tipo: null, setor: null, texto: '', dia: '' };
+        carregar();
+        toast('Registrado.', 'Desfazer', function(){
+          api('/ocorrencias/' + reg.id, {method:'DELETE'}).then(function(){ toast('Registro desfeito.'); carregar(); }).catch(function(e){ toast(e.message); });
+        });
+      })
+      .catch(function(e){ ok.disabled = false; toast(e.message); });
+  };
+}
+
+// ======================================================= relatório ===
+var REL = { preset: 'mes', de: '', ate: '', dados: null, carregando: false };
+function isoDe(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function periodo(preset){
+  var h = new Date(), de, ate;
+  if (preset === 'mes') { de = new Date(h.getFullYear(), h.getMonth(), 1); ate = new Date(h.getFullYear(), h.getMonth() + 1, 0); }
+  else if (preset === 'mes_passado') { de = new Date(h.getFullYear(), h.getMonth() - 1, 1); ate = new Date(h.getFullYear(), h.getMonth(), 0); }
+  else if (preset === '7d') { ate = h; de = new Date(h.getFullYear(), h.getMonth(), h.getDate() - 6); }
+  else if (preset === '30d') { ate = h; de = new Date(h.getFullYear(), h.getMonth(), h.getDate() - 29); }
+  else if (preset === 'ano') { de = new Date(h.getFullYear(), 0, 1); ate = new Date(h.getFullYear(), 11, 31); }
+  return { de: isoDe(de), ate: isoDe(ate) };
+}
+function buscarRelatorio(){
+  REL.carregando = true; renderRelatorio();
+  api('/relatorio?de=' + REL.de + '&ate=' + REL.ate).then(function(d){ REL.dados = d; REL.carregando = false; renderRelatorio(); })
+    .catch(function(e){ REL.carregando = false; toast(e.message); renderRelatorio(); });
+}
+
+function renderRelatorio(){
+  if (!REL.de) { var p = periodo(REL.preset); REL.de = p.de; REL.ate = p.ate; buscarRelatorio(); return; }
+  var h = abas();
+  var presets = [['mes','Este mês'],['mes_passado','Mês passado'],['7d','Últimos 7 dias'],['30d','Últimos 30 dias'],['ano','Este ano'],['livre','Escolher datas']];
+  h += '<div class="caixa rel-filtro"><div class="campo"><label for="rel-preset">Período</label><select id="rel-preset">';
+  for (var i = 0; i < presets.length; i++) h += '<option value="' + presets[i][0] + '"' + (REL.preset === presets[i][0] ? ' selected' : '') + '>' + presets[i][1] + '</option>';
+  h += '</select></div><div class="campo"><label for="rel-de">De</label><input type="date" id="rel-de" value="' + REL.de + '"></div>'
+    + '<div class="campo"><label for="rel-ate">Até</label><input type="date" id="rel-ate" value="' + REL.ate + '"></div></div>';
+
+  var d = REL.dados;
+  if (REL.carregando || !d) { app.innerHTML = h + '<p class="msg">Gerando relatório…</p>'; ligarComum(); ligarRelatorio(); return; }
+
+  h += '<div class="so-print"><h2 style="font-size:20px">Relatório de indicadores de compras</h2><p class="msg">Período: ' + dBr(d.de) + ' a ' + dBr(d.ate) + ' · gerado em ' + dBr(hojeISO()) + '</p></div>';
+
+  // totais
+  var porTipo = {}, porSetor = {};
+  for (var t = 0; t < ORDEM_TIPOS.length; t++) { porTipo[ORDEM_TIPOS[t]] = []; porSetor[ORDEM_TIPOS[t]] = {}; }
+  for (var o = 0; o < d.ocorrencias.length; o++) {
+    var oc = d.ocorrencias[o];
+    if (!porTipo[oc.tipo]) continue;
+    porTipo[oc.tipo].push(oc);
+    porSetor[oc.tipo][oc.setor] = (porSetor[oc.tipo][oc.setor] || 0) + 1;
+  }
+  h += '<div class="rel-tot">';
+  for (var t2 = 0; t2 < ORDEM_TIPOS.length; t2++) {
+    var k = ORDEM_TIPOS[t2], n = porTipo[k].length, a = d.anterior.totais[k] || 0, dif = n - a;
+    var txt = dif === 0 ? 'igual ao período anterior (' + a + ')' : (dif > 0 ? '▲ ' + dif + ' a mais' : '▼ ' + (-dif) + ' a menos') + ' que o período anterior (' + a + ')';
+    h += '<div class="ind ' + k + '"><div class="num">' + n + '</div><div class="rot">' + esc(d.tipos[k].nome) + '</div>'
+      + '<div class="delta ' + (dif > 0 ? 'sobe' : dif < 0 ? 'desce' : '') + '">' + txt + '</div></div>';
+  }
+  h += '</div>';
+
+  // por setor
+  for (var t3 = 0; t3 < ORDEM_TIPOS.length; t3++) {
+    var kk = ORDEM_TIPOS[t3], mapa = porSetor[kk], lista = [];
+    for (var st in mapa) lista.push([st, mapa[st]]);
+    lista.sort(function(x, y){ return y[1] - x[1] || x[0].localeCompare(y[0]); });
+    h += '<h3>' + esc(d.tipos[kk].nome) + ' · por setor</h3><div class="caixa">';
+    if (!lista.length) { h += '<p class="msg" style="margin:0">Nenhum registro no período.</p>'; }
+    else {
+      var max = lista[0][1];
+      h += '<div class="barras">';
+      for (var b = 0; b < lista.length; b++) {
+        h += '<div class="barra"><span>' + esc(lista[b][0]) + '</span><span class="trilho"><span class="enche ' + kk + '" style="display:block;width:' + Math.max(4, Math.round(lista[b][1] / max * 100)) + '%"></span></span><span class="q">' + lista[b][1] + '</span></div>';
+      }
+      h += '</div>';
+    }
+    h += '</div>';
+  }
+
+  // lista completa
+  h += '<h3>Todos os registros (' + d.ocorrencias.length + ')</h3><div class="caixa">';
+  if (!d.ocorrencias.length) h += '<p class="msg" style="margin:0">Nenhum registro no período.</p>';
+  else {
+    h += '<table class="rel"><thead><tr><th>Data</th><th>Indicador</th><th>Setor</th><th>O que aconteceu</th></tr></thead><tbody>';
+    for (var r = 0; r < d.ocorrencias.length; r++) {
+      var x = d.ocorrencias[r];
+      h += '<tr><td style="white-space:nowrap">' + dBr(x.dia) + '</td><td><span class="pill ' + x.tipo + '">' + rotuloCurto(x.tipo) + '</span></td><td>' + esc(x.setor) + '</td><td>' + esc(x.descricao) + '</td></tr>';
+    }
+    h += '</tbody></table>';
+  }
+  h += '</div><div class="rel-acoes"><button class="bt-verde" id="rel-print">Imprimir / salvar PDF</button><button class="bt-cinza" id="rel-csv">Baixar planilha (Excel)</button></div>';
+
+  app.innerHTML = h;
+  ligarComum();
+  ligarRelatorio();
+}
+
+function ligarRelatorio(){
+  var pr = document.getElementById('rel-preset');
+  pr.onchange = function(){
+    REL.preset = this.value;
+    if (REL.preset === 'livre') { renderRelatorio(); document.getElementById('rel-de').focus(); return; }
+    var p = periodo(REL.preset); REL.de = p.de; REL.ate = p.ate; buscarRelatorio();
+  };
+  var mudouData = function(){
+    var de = document.getElementById('rel-de').value, ate = document.getElementById('rel-ate').value;
+    if (!de || !ate) return;
+    if (de > ate) { toast('A data inicial precisa ser antes da final.'); return; }
+    REL.preset = 'livre'; REL.de = de; REL.ate = ate; buscarRelatorio();
+  };
+  document.getElementById('rel-de').onchange = mudouData;
+  document.getElementById('rel-ate').onchange = mudouData;
+  var bp = document.getElementById('rel-print');
+  if (bp) bp.onclick = function(){ window.print(); };
+  var bc = document.getElementById('rel-csv');
+  if (bc) bc.onclick = function(){
+    var d = REL.dados, linhas = [['Data','Indicador','Setor','O que aconteceu']];
+    for (var i = 0; i < d.ocorrencias.length; i++) {
+      var o = d.ocorrencias[i];
+      linhas.push([dBr(o.dia).replace(/\/(\d\d)$/, '/20$1'), d.tipos[o.tipo] ? d.tipos[o.tipo].nome : o.tipo, o.setor, o.descricao]);
+    }
+    var csv = linhas.map(function(l){ return l.map(function(c){ return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n');
+    var blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'indicadores-compras_' + d.de + '_a_' + d.ate + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+}
+
 function ligar(){
+  ligarComum();
+  ligarOcorrencias();
   var dels = app.querySelectorAll('[data-del]');
   for (var i = 0; i < dels.length; i++) dels[i].onclick = function(){
     var alvo = this.getAttribute('data-del');
